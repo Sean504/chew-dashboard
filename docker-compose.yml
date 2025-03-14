@@ -6,8 +6,9 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - API_BASE_URL=http://host.docker.internal:8080
-    # For Linux hosts
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=http://host.docker.internal:8080
     extra_hosts:
       - "host.docker.internal:host-gateway"
+
 
