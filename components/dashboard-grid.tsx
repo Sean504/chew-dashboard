@@ -23,6 +23,7 @@ import {
 } from "lucide-react"
 import { useState, useEffect } from "react"
 import { format, parseISO } from "date-fns"
+import { fetchWeather, fetchFlights, fetchAircraft } from "@/lib/api-client"
 
 // Define types based on the API responses
 interface Aircraft {
@@ -65,14 +66,33 @@ export function DashboardGrid() {
   const [weatherData, setWeatherData] = useState<Weather | null>(null)
   const [aircraftData, setAircraftData] = useState<Aircraft[]>([])
   const [flightData, setFlightData] = useState<Flight[]>([])
-  const [trafficData, setTrafficData] = useState(null)
-  const [mediaData, setMediaData] = useState(null)
+  const [trafficData, setTrafficData] = useState({
+    overall: { condition: "Moderate", change: 12 },
+    routes: [
+      { name: "Highway 101", color: "primary", duration: "32 min" },
+      { name: "Interstate 280", color: "secondary", duration: "45 min" },
+      { name: "Market Street", color: "accent", duration: "18 min" },
+    ],
+  })
+  const [mediaData, setMediaData] = useState({
+    nowPlaying: {
+      title: "Mint Green Dreams",
+      artist: "Modern Vibes",
+      progress: 0.66,
+      currentTime: "2:14",
+      duration: "3:45",
+    },
+    queue: [
+      { title: "Paper Bag Memories", artist: "The Mocha Collective", duration: "4:12" },
+      { title: "Charcoal Nights", artist: "Grey Tones", duration: "3:28" },
+    ],
+  })
   const [loading, setLoading] = useState({
     weather: true,
     flights: true,
     aircraft: true,
-    traffic: true,
-    media: true,
+    traffic: false,
+    media: false,
   })
   const [error, setError] = useState({
     weather: false,
@@ -84,18 +104,12 @@ export function DashboardGrid() {
 
   // Fetch weather data when location changes
   useEffect(() => {
-    const fetchWeatherData = async () => {
+    const getWeatherData = async () => {
       setLoading((prev) => ({ ...prev, weather: true }))
       setError((prev) => ({ ...prev, weather: false }))
 
       try {
-        const response = await fetch(`/api/v1/weather/${weatherLocation}/current`)
-
-        if (!response.ok) {
-          throw new Error(`Failed to fetch weather data: ${response.status}`)
-        }
-
-        const data = await response.json()
+        const data = await fetchWeather(weatherLocation)
         setWeatherData(data[0]) // API returns an array with one item
       } catch (error) {
         console.error("Error fetching weather data:", error)
@@ -105,22 +119,16 @@ export function DashboardGrid() {
       }
     }
 
-    fetchWeatherData()
+    getWeatherData()
   }, [weatherLocation])
 
   // Fetch flights and aircraft data on component mount
   useEffect(() => {
-    const fetchData = async () => {
+    const getData = async () => {
       // Fetch flights
       try {
         setLoading((prev) => ({ ...prev, flights: true }))
-        const flightsResponse = await fetch("/api/v1/flights")
-
-        if (!flightsResponse.ok) {
-          throw new Error(`Failed to fetch flights data: ${flightsResponse.status}`)
-        }
-
-        const flightsData = await flightsResponse.json()
+        const flightsData = await fetchFlights()
         setFlightData(flightsData)
       } catch (error) {
         console.error("Error fetching flights data:", error)
@@ -132,13 +140,7 @@ export function DashboardGrid() {
       // Fetch aircraft
       try {
         setLoading((prev) => ({ ...prev, aircraft: true }))
-        const aircraftResponse = await fetch("/api/v1/aircraft")
-
-        if (!aircraftResponse.ok) {
-          throw new Error(`Failed to fetch aircraft data: ${aircraftResponse.status}`)
-        }
-
-        const aircraftData = await aircraftResponse.json()
+        const aircraftData = await fetchAircraft()
         setAircraftData(aircraftData)
       } catch (error) {
         console.error("Error fetching aircraft data:", error)
@@ -146,33 +148,9 @@ export function DashboardGrid() {
       } finally {
         setLoading((prev) => ({ ...prev, aircraft: false }))
       }
-
-      // Mock data for traffic and media since we don't have real endpoints
-      setTrafficData({
-        overall: { condition: "Moderate", change: 12 },
-        routes: [
-          { name: "Highway 101", color: "primary", duration: "32 min" },
-          { name: "Interstate 280", color: "secondary", duration: "45 min" },
-          { name: "Market Street", color: "accent", duration: "18 min" },
-        ],
-      })
-      setMediaData({
-        nowPlaying: {
-          title: "Mint Green Dreams",
-          artist: "Modern Vibes",
-          progress: 0.66,
-          currentTime: "2:14",
-          duration: "3:45",
-        },
-        queue: [
-          { title: "Paper Bag Memories", artist: "The Mocha Collective", duration: "4:12" },
-          { title: "Charcoal Nights", artist: "Grey Tones", duration: "3:28" },
-        ],
-      })
-      setLoading((prev) => ({ ...prev, traffic: false, media: false }))
     }
 
-    fetchData()
+    getData()
   }, [])
 
   // Helper function to get weather icon based on conditions
@@ -580,4 +558,5 @@ export function DashboardGrid() {
     </div>
   )
 }
+
 
