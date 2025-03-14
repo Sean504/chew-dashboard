@@ -1,7 +1,5 @@
-# Use Node.js as base image
 FROM node:18-alpine
 
-# Set working directory
 WORKDIR /app
 
 # Copy package files
@@ -13,6 +11,10 @@ RUN npm install --legacy-peer-deps
 
 # Copy the rest of the application
 COPY . .
+
+# Set environment variables
+ENV NODE_ENV=production
+ENV NEXT_PUBLIC_API_URL=http://host.docker.internal:8080
 
 # Build the application
 RUN npm run build
