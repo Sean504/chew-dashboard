@@ -3,12 +3,12 @@ FROM node:18-alpine
 WORKDIR /app
 
 # Copy package files
-COPY package.json package-lock.json ./
+COPY package.json 
 COPY scripts/install-legacy-deps.js ./scripts/
 
 # Install dependencies with legacy peer deps flag
 RUN npm install --legacy-peer-deps
-
+COPY package-lock.json ./
 # Copy the rest of the application
 COPY . .
 
